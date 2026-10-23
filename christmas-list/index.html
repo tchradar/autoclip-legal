@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wishlist Elf</title>
+  <meta name="description" content="Get Christmas list ideas by age and category.">
+  <meta name="theme-color" content="#1f4d3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wishlist Elf">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    :root {
+      --bg: #faf6ef;
+      --surface: #ffffff;
+      --text: #1d2420;
+      --muted: #66706a;
+      --line: #e6e0d4;
+      --green: #1f4d3a;
+      --green-soft: #e3efe8;
+      --red: #c0392b;
+      --red-soft: #fbe9e6;
+      --gold: #c9962b;
+      --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111714;
+        --surface: #1a221e;
+        --text: #eef2ef;
+        --muted: #9aa69f;
+        --line: #2b3631;
+        --green: #5fbf8f;
+        --green-soft: #1f3329;
+        --red: #ff7a6b;
+        --red-soft: #3a2220;
+        --gold: #e5b552;
+        --shadow: 0 1px 2px rgba(0,0,0,.3);
+      }
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      min-height: 100dvh;
+      padding-bottom: calc(76px + env(safe-area-inset-bottom));
+    }
+    header {
+      background: var(--green);
+      color: #fff;
+      padding: calc(18px + env(safe-area-inset-top)) 16px 18px;
+    }
+    @media (prefers-color-scheme: dark) { header { background: #183b2c; } }
+    header h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
+    header p { margin: 2px 0 0; opacity: .8; font-size: .95rem; }
+    main { max-width: 640px; margin: 0 auto; padding: 16px; }
+    section.view[hidden] { display: none; }
+
+    h2 { font-size: 1rem; margin: 22px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
+    h2 small { font-weight: 400; color: var(--muted); font-size: .85rem; }
+    h2:first-child { margin-top: 4px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border: 1.5px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: .95rem;
+      cursor: pointer;
+      min-height: 40px;
+    }
+    .chip[aria-pressed="true"] {
+      background: var(--green-soft);
+      border-color: var(--green);
+      color: var(--green);
+      font-weight: 600;
+    }
+    .chip .sub { display: block; font-size: .72rem; font-weight: 400; color: var(--muted); }
+    .age-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .age-grid .chip { border-radius: 14px; padding: 10px 6px; text-align: center; }
+    .linkish { background: none; border: 0; color: var(--green); font: inherit; font-size: .85rem; cursor: pointer; padding: 0; }
+
+    .btn {
+      display: block; width: 100%;
+      border: 0; border-radius: 14px;
+      background: var(--red); color: #fff;
+      font: inherit; font-weight: 700; font-size: 1.05rem;
+      padding: 15px; margin-top: 24px; cursor: pointer;
+    }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .btn.secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--line); font-weight: 600; margin-top: 12px; }
+
+    .results { margin-top: 8px; display: grid; gap: 10px; }
+    .card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: 14px; padding: 12px; box-shadow: var(--shadow);
+      animation: pop .25s ease both;
+    }
+    @keyframes pop { from { opacity: 0; transform: translateY(6px); } }
+    .card .emoji { font-size: 1.6rem; width: 44px; height: 44px; display: grid; place-items: center; background: var(--green-soft); border-radius: 12px; flex: none; }
+    .card .info { flex: 1; min-width: 0; }
+    .card .name { font-weight: 600; }
+    .card .meta { color: var(--muted); font-size: .82rem; }
+    .card .price { color: var(--gold); font-weight: 700; }
+    .add {
+      flex: none; width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid var(--line); background: var(--surface);
+      font-size: 1.25rem; cursor: pointer; color: var(--muted);
+    }
+    .add[aria-pressed="true"] { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+
+    .empty { text-align: center; color: var(--muted); padding: 40px 16px; }
+    .empty .big { font-size: 3rem; }
+
+    .list-item { animation: none; }
+    .list-item.done .name { text-decoration: line-through; color: var(--muted); }
+    .check {
+      flex: none; width: 28px; height: 28px; border-radius: 8px;
+      border: 2px solid var(--line); background: var(--surface); cursor: pointer;
+      color: #fff; font-size: 1rem; line-height: 1;
+    }
+    .done .check { background: var(--green); border-color: var(--green); }
+    .remove { background: none; border: 0; color: var(--muted); font-size: 1.3rem; cursor: pointer; width: 36px; height: 36px; }
+
+    .custom { display: flex; gap: 8px; margin-bottom: 12px; }
+    .custom input {
+      flex: 1; min-width: 0; font: inherit; padding: 12px 14px;
+      border-radius: 12px; border: 1.5px solid var(--line);
+      background: var(--surface); color: var(--text);
+    }
+    .custom button { border: 0; border-radius: 12px; background: var(--green); color: #fff; font: inherit; font-weight: 600; padding: 0 16px; cursor: pointer; }
+    @media (prefers-color-scheme: dark) { .custom button { color: #0d1a13; } }
+
+    nav.tabs {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      display: flex; background: var(--surface); border-top: 1px solid var(--line);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    nav.tabs button {
+      flex: 1; border: 0; background: none; color: var(--muted);
+      font: inherit; font-size: .78rem; padding: 10px 0 8px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    nav.tabs button .ico { font-size: 1.35rem; line-height: 1; position: relative; }
+    nav.tabs button[aria-selected="true"] { color: var(--green); font-weight: 700; }
+    .badge {
+      position: absolute; top: -4px; right: -12px;
+      background: var(--red); color: #fff; font-size: .65rem; font-weight: 700;
+      border-radius: 999px; min-width: 17px; height: 17px; padding: 0 4px;
+      display: grid; place-items: center;
+    }
+    .badge[hidden] { display: none; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(20px); opacity: 0;
+      background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px;
+      font-size: .9rem; transition: .2s; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎄 Wishlist Elf</h1>
+    <p>Christmas list ideas, picked for you</p>
+  </header>
+
+  <main>
+    <section class="view" id="view-ideas">
+      <h2>Who's the list for?</h2>
+      <div class="age-grid" id="ages"></div>
+
+      <h2>What are they into? <button class="linkish" id="toggle-all" type="button">Select all</button></h2>
+      <div class="chips" id="categories"></div>
+
+      <h2>Budget</h2>
+      <div class="chips" id="budgets"></div>
+
+      <button class="btn" id="generate" type="button">✨ Get gift ideas</button>
+
+      <div id="results-wrap" hidden>
+        <h2 id="results-title">Ideas <small id="results-count"></small></h2>
+        <div class="results" id="results"></div>
+        <button class="btn secondary" id="more" type="button">🔄 Show me different ideas</button>
+      </div>
+    </section>
+
+    <section class="view" id="view-list" hidden>
+      <h2>My Christmas list <small id="list-count"></small></h2>
+      <form class="custom" id="custom-form">
+        <input id="custom-input" type="text" placeholder="Add your own idea…" maxlength="80" autocomplete="off">
+        <button type="submit">Add</button>
+      </form>
+      <div class="results" id="my-list"></div>
+      <button class="btn" id="share" type="button">📤 Share my list</button>
+      <button class="btn secondary" id="clear" type="button">Clear list</button>
+    </section>
+  </main>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-view="ideas"><span class="ico">🎁</span>Ideas</button>
+    <button role="tab" aria-selected="false" data-view="list"><span class="ico">📝<span class="badge" id="badge" hidden>0</span></span>My List</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="gifts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
